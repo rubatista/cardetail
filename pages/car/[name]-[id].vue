@@ -13,6 +13,13 @@ const car = computed(() => {
   })
 })
 
+if(!car.value){
+  throw createError({
+    statusCode: 404,
+    message: `Car ${route.params.name}-${route.params.id} not found`
+  })
+}
+
 definePageMeta({
   layout: "costum",
 });
