@@ -1,6 +1,6 @@
 <script setup>
-useHead({
-    title: "Cartrader",
+definePageMeta({
+    layout: 'costum',
 })
 </script>
 
