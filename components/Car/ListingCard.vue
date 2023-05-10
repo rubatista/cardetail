@@ -1,11 +1,21 @@
+<script setup>
+const props = defineProps({
+    listing: Object,
+})
+</script>
+
 <template>
     <div class="shaddow rounded overflow-hidden flex justify-between mb-4">
         <div class="flex">
-            <img src="" alt="" class="w-80 mr-3 h-44">
+            <img :src="listing.url" :alt="listing.name" class="w-80 mr-3 h-44">
             <div class="p-3">
-                <h1 class="text-2xl"></h1>
-                <p class="text-blue-400"></p>
+                <h1 class="text-2xl">{{ listing.name }}</h1>
+                <p class="text-blue-400">{{ listing.price }}€</p>
             </div>
+        </div>
+        <div class="p-3 flex">
+            <NuxtLink class="text-blue-400 mr-5" :to="`/profile/listings/view/${listing.id}`">view</NuxtLink>
+            <p class="text-red-400 cursor-pointer">Delete</p>
         </div>
     </div>
 </template>
