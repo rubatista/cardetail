@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import { mkdirSync } from 'node:fs';
 import { parentPort, threadId } from 'node:worker_threads';
 import { provider, isWindows } from 'file:///home/ruben/Projects/cardetail/node_modules/std-env/dist/index.mjs';
-import { defineEventHandler, handleCacheHeaders, createEvent, eventHandler, setHeaders, sendRedirect, proxyRequest, setResponseStatus, getRequestHeader, getRequestHeaders, setResponseHeader, createApp, createRouter as createRouter$1, toNodeListener, fetchWithEvent, lazyEventHandler, getQuery, createError } from 'file:///home/ruben/Projects/cardetail/node_modules/h3/dist/index.mjs';
+import { defineEventHandler, handleCacheHeaders, createEvent, eventHandler, setHeaders, sendRedirect, proxyRequest, setResponseStatus, getRequestHeader, getRequestHeaders, setResponseHeader, assertMethod, readBody, setCookie, createApp, createRouter as createRouter$1, toNodeListener, fetchWithEvent, lazyEventHandler, getQuery, createError } from 'file:///home/ruben/Projects/cardetail/node_modules/h3/dist/index.mjs';
 import { createRenderer } from 'file:///home/ruben/Projects/cardetail/node_modules/vue-bundle-renderer/dist/runtime.mjs';
 import devalue from 'file:///home/ruben/Projects/cardetail/node_modules/@nuxt/devalue/dist/devalue.mjs';
 import { renderToString } from 'file:///home/ruben/Projects/cardetail/node_modules/vue/server-renderer/index.mjs';
@@ -27,7 +27,7 @@ const inlineAppConfig = {};
 
 const appConfig = defuFn(inlineAppConfig);
 
-const _runtimeConfig = {"app":{"baseURL":"/","buildAssetsDir":"/_nuxt/","cdnURL":""},"nitro":{"envPrefix":"NUXT_","routeRules":{"/__nuxt_error":{"cache":false}}},"public":{}};
+const _runtimeConfig = {"app":{"baseURL":"/","buildAssetsDir":"/_nuxt/","cdnURL":""},"nitro":{"envPrefix":"NUXT_","routeRules":{"/__nuxt_error":{"cache":false}}},"public":{"supabase":{"url":"https://xvnolwsmonmwtkbmvecc.supabase.co","key":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh2bm9sd3Ntb25td3RrYm12ZWNjIiwicm9sZSI6ImFub24iLCJpYXQiOjE2ODM4MDA0MjAsImV4cCI6MTk5OTM3NjQyMH0.Dp9N643qHkzqoHdd53uKhoWTKjJI5cvWRmsXWfV2dvQ","client":{},"redirect":false,"cookies":{"name":"sb","lifetime":28800,"domain":"","path":"/","sameSite":"lax"}}},"supabase":{"serviceKey":""}};
 const ENV_PREFIX = "NITRO_";
 const ENV_PREFIX_ALT = _runtimeConfig.nitro.envPrefix ?? process.env.NITRO_ENV_PREFIX ?? "_";
 overrideConfig(_runtimeConfig);
@@ -330,9 +330,9 @@ function cloneWithProxy(obj, overrides) {
 }
 const cachedEventHandler = defineCachedEventHandler;
 
-const config = useRuntimeConfig();
+const config$1 = useRuntimeConfig();
 const _routeRulesMatcher = toRouteMatcher(
-  createRouter({ routes: config.nitro.routeRules })
+  createRouter({ routes: config$1.nitro.routeRules })
 );
 function createRouteRulesHandler() {
   return eventHandler((event) => {
@@ -495,10 +495,63 @@ const errorHandler = (async function errorhandler(error, event) {
   event.node.res.end(await res.text());
 });
 
+function buildAssetsURL(...path) {
+  return joinURL(publicAssetsURL(), useRuntimeConfig().app.buildAssetsDir, ...path);
+}
+function publicAssetsURL(...path) {
+  const publicBase = useRuntimeConfig().app.cdnURL || useRuntimeConfig().app.baseURL;
+  return path.length ? joinURL(publicBase, ...path) : publicBase;
+}
+
+const config = useRuntimeConfig().public;
+const _LPkmIv = defineEventHandler(async (event) => {
+  assertMethod(event, "POST");
+  const body = await readBody(event);
+  const cookieOptions = config.supabase.cookies;
+  const { event: signEvent, session } = body;
+  if (!event) {
+    throw new Error("Auth event missing!");
+  }
+  if (signEvent === "SIGNED_IN" || signEvent === "TOKEN_REFRESHED") {
+    if (!session) {
+      throw new Error("Auth session missing!");
+    }
+    setCookie(
+      event,
+      `${cookieOptions.name}-access-token`,
+      session.access_token,
+      {
+        domain: cookieOptions.domain,
+        maxAge: cookieOptions.lifetime ?? 0,
+        path: cookieOptions.path,
+        sameSite: cookieOptions.sameSite
+      }
+    );
+    setCookie(event, `${cookieOptions.name}-refresh-token`, session.refresh_token, {
+      domain: cookieOptions.domain,
+      maxAge: cookieOptions.lifetime ?? 0,
+      path: cookieOptions.path,
+      sameSite: cookieOptions.sameSite
+    });
+  }
+  if (signEvent === "SIGNED_OUT") {
+    setCookie(event, `${cookieOptions.name}-access-token`, "", {
+      maxAge: -1,
+      path: cookieOptions.path
+    });
+    setCookie(event, `${cookieOptions.name}-refresh-token`, "", {
+      maxAge: -1,
+      path: cookieOptions.path
+    });
+  }
+  return "auth cookie set";
+});
+
 const _lazy_e0LjtH = () => Promise.resolve().then(function () { return renderer$1; });
 
 const handlers = [
   { route: '/__nuxt_error', handler: _lazy_e0LjtH, lazy: true, middleware: false, method: undefined },
+  { route: '/api/_supabase/session', handler: _LPkmIv, lazy: false, middleware: false, method: undefined },
   { route: '/**', handler: _lazy_e0LjtH, lazy: true, middleware: false, method: undefined }
 ];
 
@@ -628,14 +681,6 @@ const errorDev = /*#__PURE__*/Object.freeze({
 const appRootId = "__nuxt";
 
 const appRootTag = "div";
-
-function buildAssetsURL(...path) {
-  return joinURL(publicAssetsURL(), useRuntimeConfig().app.buildAssetsDir, ...path);
-}
-function publicAssetsURL(...path) {
-  const publicBase = useRuntimeConfig().app.cdnURL || useRuntimeConfig().app.baseURL;
-  return path.length ? joinURL(publicBase, ...path) : publicBase;
-}
 
 globalThis.__buildAssetsURL = buildAssetsURL;
 globalThis.__publicAssetsURL = publicAssetsURL;
