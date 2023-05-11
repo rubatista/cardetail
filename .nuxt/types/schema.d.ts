@@ -3,9 +3,10 @@ declare module '@nuxt/schema' {
   interface NuxtConfig {
     ["tailwindcss"]?: typeof import("@nuxtjs/tailwindcss").default extends NuxtModule<infer O> ? Partial<O> : Record<string, any>
     ["image"]?: typeof import("@nuxt/image-edge").default extends NuxtModule<infer O> ? Partial<O> : Record<string, any>
+    ["supabase"]?: typeof import("@nuxtjs/supabase").default extends NuxtModule<infer O> ? Partial<O> : Record<string, any>
     ["nuxt-config-schema"]?: typeof import("nuxt-config-schema").default extends NuxtModule<infer O> ? Partial<O> : Record<string, any>
     ["telemetry"]?: typeof import("@nuxt/telemetry").default extends NuxtModule<infer O> ? Partial<O> : Record<string, any>
-    modules?: (NuxtModule | string | [NuxtModule | string, Record<string, any>] | ["@nuxtjs/tailwindcss", NuxtConfig["tailwindcss"]] | ["@nuxt/image-edge", NuxtConfig["image"]] | ["nuxt-config-schema", NuxtConfig["nuxt-config-schema"]] | ["@nuxt/telemetry", NuxtConfig["telemetry"]])[],
+    modules?: (NuxtModule | string | [NuxtModule | string, Record<string, any>] | ["@nuxtjs/tailwindcss", NuxtConfig["tailwindcss"]] | ["@nuxt/image-edge", NuxtConfig["image"]] | ["@nuxtjs/supabase", NuxtConfig["supabase"]] | ["nuxt-config-schema", NuxtConfig["nuxt-config-schema"]] | ["@nuxt/telemetry", NuxtConfig["telemetry"]])[],
   }
   interface RuntimeConfig {
    app: {
@@ -15,8 +16,32 @@ declare module '@nuxt/schema' {
 
       cdnURL: string,
    },
+
+   supabase: {
+      serviceKey: any,
+   },
   }
   interface PublicRuntimeConfig {
+   supabase: {
+      url: string,
 
+      key: string,
+
+      client: any,
+
+      redirect: boolean,
+
+      cookies: {
+         name: string,
+
+         lifetime: number,
+
+         domain: string,
+
+         path: string,
+
+         sameSite: string,
+      },
+   },
   }
 }
