@@ -8,8 +8,9 @@ const props = defineProps({
 const emits = defineEmits(['changeInput']);
 const state = ref("");
 const onChange = () => {
-emits("changeInput", state.value, props.name)
+    emits("changeInput", state.value, props.name)
 }
+
 </script>
 
 <template>
