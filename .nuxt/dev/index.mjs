@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import { mkdirSync } from 'node:fs';
 import { parentPort, threadId } from 'node:worker_threads';
 import { provider, isWindows } from 'file:///home/ruben/Projects/cardetail/node_modules/std-env/dist/index.mjs';
-import { defineEventHandler, handleCacheHeaders, createEvent, eventHandler, setHeaders, sendRedirect, proxyRequest, setResponseStatus, getRequestHeader, getRequestHeaders, setResponseHeader, assertMethod, readBody, setCookie, createApp, createRouter as createRouter$1, toNodeListener, fetchWithEvent, lazyEventHandler, getQuery, createError } from 'file:///home/ruben/Projects/cardetail/node_modules/h3/dist/index.mjs';
+import { defineEventHandler, handleCacheHeaders, createEvent, eventHandler, setHeaders, sendRedirect, proxyRequest, setResponseStatus, getRequestHeader, getRequestHeaders, setResponseHeader, assertMethod, readBody, setCookie, createApp, createRouter as createRouter$1, toNodeListener, fetchWithEvent, lazyEventHandler, createError, getQuery } from 'file:///home/ruben/Projects/cardetail/node_modules/h3/dist/index.mjs';
 import { createRenderer } from 'file:///home/ruben/Projects/cardetail/node_modules/vue-bundle-renderer/dist/runtime.mjs';
 import devalue from 'file:///home/ruben/Projects/cardetail/node_modules/@nuxt/devalue/dist/devalue.mjs';
 import { renderToString } from 'file:///home/ruben/Projects/cardetail/node_modules/vue/server-renderer/index.mjs';
@@ -547,10 +547,12 @@ const _LPkmIv = defineEventHandler(async (event) => {
   return "auth cookie set";
 });
 
+const _lazy_hyniTX = () => Promise.resolve().then(function () { return _id_$1; });
 const _lazy_wKPcz9 = () => Promise.resolve().then(function () { return _city_$1; });
 const _lazy_e0LjtH = () => Promise.resolve().then(function () { return renderer$1; });
 
 const handlers = [
+  { route: '/api/car/:id', handler: _lazy_hyniTX, lazy: true, middleware: false, method: undefined },
   { route: '/api/cars/:city', handler: _lazy_wKPcz9, lazy: true, middleware: false, method: undefined },
   { route: '/__nuxt_error', handler: _lazy_e0LjtH, lazy: true, middleware: false, method: undefined },
   { route: '/api/_supabase/session', handler: _LPkmIv, lazy: false, middleware: false, method: undefined },
@@ -825,6 +827,25 @@ const cars = [
 		description: "Lorem ipsum dolor sit amet consectetur adipisicing elit. Debitis odio et"
 	}
 ];
+
+const _id_ = defineEventHandler((event) => {
+  const { id } = event.context.params;
+  const car = cars.find((c) => {
+    return c.id === parseInt(id);
+  });
+  if (!car) {
+    throw createError({
+      statusCode: 404,
+      message: `Car with ID of ${id} does not exist`
+    });
+  }
+  return car;
+});
+
+const _id_$1 = /*#__PURE__*/Object.freeze({
+      __proto__: null,
+      default: _id_
+});
 
 const _city_ = defineEventHandler((event) => {
   const { city } = event.context.params;
