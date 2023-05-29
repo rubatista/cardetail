@@ -5,6 +5,7 @@ definePageMeta({
 
 const {makes} = useCars();
 const user = useSupabaseUser();
+const supabase = useSupabaseClient()
 
 const info = useState('adInfo', () =>{
     return {
@@ -17,7 +18,7 @@ const info = useState('adInfo', () =>{
         seats: '',
         features: '',
         description: '',
-        img: 'asdasads',
+        image: null,
     }
 });
 
@@ -73,6 +74,12 @@ const isButtonDisabled = computed(() => {
 })
 
 const handleSubmit = async () => {
+    const fileName = Math.floor(Math.random() * 1000000000000)
+    const {data,error} = await supabase.storage.from("images").upload("public/" + fileName, info.value.image)
+
+    if(error) {
+        return (errorMessage.value = "Cannot upload image")
+    }
     const body = {
         ...info.value,
         city: info.value.city.toLowerCase(),
@@ -83,7 +90,7 @@ const handleSubmit = async () => {
         year: parseInt(info.value.year),
         name: `${info.value.make} ${info.value.model}`,
         listerId: user.value.id,
-        img: "asdasads"
+        image: data.path
     }
 
     delete body.seats;
@@ -96,6 +103,7 @@ const handleSubmit = async () => {
         navigateTo('/profile/listings')
     }catch (error) {
         errorMessage.value = error.statusMessage
+        await supabase.storage.from("images").remove(data.path)
     }
 }
 </script>
