@@ -7,7 +7,7 @@ const props = defineProps({
 <template>
     <div class="mt-10">
           <nuxt-img
-            :src="car.url"
+            :src="car.img"
             class="w-full"
             :alt="car.name"
           />
@@ -16,7 +16,7 @@ const props = defineProps({
             class="text-slate-500 flex text-lg mt-3 border-b pb-5 justify-between"
           >
             <div class="flex">
-              <p class="mr-2">{{ car.seats }} seats</p>
+              <p class="mr-2">{{ car.numberOfSeats }} seats</p>
               <p class="mr-2">|</p>
               <p class="mr-2">{{car.miles}} KM</p>
             </div>
