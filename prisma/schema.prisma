@@ -17,7 +17,7 @@ model Car {
   miles         Int
   price         Int
   year          Int
-  img           String
+  image         String
   features      String[]
   description   String
   city          String
