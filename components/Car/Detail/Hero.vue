@@ -7,7 +7,7 @@ const props = defineProps({
 <template>
     <div class="mt-10">
           <nuxt-img
-            :src="car.img"
+            :src="car.image"
             class="w-full"
             :alt="car.name"
           />
