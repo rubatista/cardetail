@@ -6,6 +6,8 @@ import { mkdirSync } from 'node:fs';
 import { parentPort, threadId } from 'node:worker_threads';
 import { provider, isWindows } from 'file:///home/ruben/Projects/cardetail/node_modules/std-env/dist/index.mjs';
 import { defineEventHandler, handleCacheHeaders, createEvent, eventHandler, setHeaders, sendRedirect, proxyRequest, setResponseStatus, getRequestHeader, getRequestHeaders, setResponseHeader, assertMethod, readBody, setCookie, createApp, createRouter as createRouter$1, toNodeListener, fetchWithEvent, lazyEventHandler, createError, getQuery } from 'file:///home/ruben/Projects/cardetail/node_modules/h3/dist/index.mjs';
+import Joi from 'file:///home/ruben/Projects/cardetail/node_modules/joi/lib/index.js';
+import { PrismaClient } from 'file:///home/ruben/Projects/cardetail/node_modules/@prisma/client/index.js';
 import { createRenderer } from 'file:///home/ruben/Projects/cardetail/node_modules/vue-bundle-renderer/dist/runtime.mjs';
 import devalue from 'file:///home/ruben/Projects/cardetail/node_modules/@nuxt/devalue/dist/devalue.mjs';
 import { renderToString } from 'file:///home/ruben/Projects/cardetail/node_modules/vue/server-renderer/index.mjs';
@@ -547,13 +549,15 @@ const _LPkmIv = defineEventHandler(async (event) => {
   return "auth cookie set";
 });
 
-const _lazy_hyniTX = () => Promise.resolve().then(function () { return _id_$1; });
-const _lazy_wKPcz9 = () => Promise.resolve().then(function () { return _city_$1; });
+const _lazy_5kdogC = () => Promise.resolve().then(function () { return _id__get$1; });
+const _lazy_pIhG8u = () => Promise.resolve().then(function () { return index_post$1; });
+const _lazy_K37Jem = () => Promise.resolve().then(function () { return _city__get$1; });
 const _lazy_e0LjtH = () => Promise.resolve().then(function () { return renderer$1; });
 
 const handlers = [
-  { route: '/api/car/:id', handler: _lazy_hyniTX, lazy: true, middleware: false, method: undefined },
-  { route: '/api/cars/:city', handler: _lazy_wKPcz9, lazy: true, middleware: false, method: undefined },
+  { route: '/api/car/:id', handler: _lazy_5kdogC, lazy: true, middleware: false, method: "get" },
+  { route: '/api/car/listings', handler: _lazy_pIhG8u, lazy: true, middleware: false, method: "post" },
+  { route: '/api/cars/:city', handler: _lazy_K37Jem, lazy: true, middleware: false, method: "get" },
   { route: '/__nuxt_error', handler: _lazy_e0LjtH, lazy: true, middleware: false, method: undefined },
   { route: '/api/_supabase/session', handler: _LPkmIv, lazy: false, middleware: false, method: undefined },
   { route: '/**', handler: _lazy_e0LjtH, lazy: true, middleware: false, method: undefined }
@@ -828,7 +832,7 @@ const cars = [
 	}
 ];
 
-const _id_ = defineEventHandler((event) => {
+const _id__get = defineEventHandler((event) => {
   const { id } = event.context.params;
   const car = cars.find((c) => {
     return c.id === parseInt(id);
@@ -842,12 +846,74 @@ const _id_ = defineEventHandler((event) => {
   return car;
 });
 
-const _id_$1 = /*#__PURE__*/Object.freeze({
+const _id__get$1 = /*#__PURE__*/Object.freeze({
       __proto__: null,
-      default: _id_
+      default: _id__get
 });
 
-const _city_ = defineEventHandler((event) => {
+const prisma = new PrismaClient();
+const schema = Joi.object({
+  make: Joi.string().required(),
+  model: Joi.string().required(),
+  year: Joi.number().min(1886).max((/* @__PURE__ */ new Date()).getFullYear() + 1).required(),
+  miles: Joi.number().min(0).required(),
+  city: Joi.string().min(2).required(),
+  numberOfSeats: Joi.number().max(9).min(1).required(),
+  features: Joi.array().items(Joi.string()).required(),
+  description: Joi.string().min(20).required(),
+  img: Joi.string().required(),
+  listerId: Joi.string().required(),
+  price: Joi.number().min(0).required(),
+  name: Joi.string().required()
+});
+const index_post = defineEventHandler(async (event) => {
+  const body = await readBody(event);
+  const { error, value } = await schema.validate(body);
+  if (error) {
+    throw createError({
+      statusCode: 412,
+      statusMessage: error.message
+    });
+  }
+  const {
+    make,
+    model,
+    year,
+    miles,
+    city,
+    numberOfSeats,
+    features,
+    description,
+    img,
+    listerId,
+    price,
+    name
+  } = body;
+  const car = await prisma.car.create({
+    data: {
+      make,
+      model,
+      year,
+      miles,
+      city: city.toLowerCase(),
+      numberOfSeats,
+      features,
+      description,
+      img,
+      listerId,
+      price,
+      name
+    }
+  });
+  return car;
+});
+
+const index_post$1 = /*#__PURE__*/Object.freeze({
+      __proto__: null,
+      default: index_post
+});
+
+const _city__get = defineEventHandler((event) => {
   const { city } = event.context.params;
   const { make, minPrice, maxPrice } = getQuery(event);
   let filteredCars = cars;
@@ -872,9 +938,9 @@ const _city_ = defineEventHandler((event) => {
   return filteredCars;
 });
 
-const _city_$1 = /*#__PURE__*/Object.freeze({
+const _city__get$1 = /*#__PURE__*/Object.freeze({
       __proto__: null,
-      default: _city_
+      default: _city__get
 });
 
 const appRootId = "__nuxt";
