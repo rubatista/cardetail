@@ -4,6 +4,7 @@ definePageMeta({
 });
 
 const {makes} = useCars();
+const user = useSupabaseUser();
 
 const info = useState('adInfo', () =>{
     return {
@@ -16,9 +17,11 @@ const info = useState('adInfo', () =>{
         seats: '',
         features: '',
         description: '',
-        image: null,
+        img: 'asdasads',
     }
 });
+
+const errorMessage = ref("")
 
 const onChangeInput = (data, name) => {
     info.value[name] = data;
@@ -36,25 +39,65 @@ const inputs = [{
     placeholder: "2008"
 },{
     id:3,
+    title: "Price *",
+    name: "price",
+    placeholder: "10000"
+},{
+    id:4,
     title: "Miles *",
     name: "miles",
     placeholder: "10000"
 },{
-    id:4,
+    id:5,
     title: "City *",
     name: "city",
     placeholder: "Porto"
 },{
-    id:5,
+    id:6,
     title: "Number of Seats *",
     name: "seats",
     placeholder: "5"
 },{
-    id:6,
+    id:7,
     title: "Features *",
     name: "features",
     placeholder: "leather interior, no accidents"
 }]
+
+const isButtonDisabled = computed(() => {
+    for(let key in info.value){
+        if(!info.value[key]) return true
+    }
+
+    return false
+})
+
+const handleSubmit = async () => {
+    const body = {
+        ...info.value,
+        city: info.value.city.toLowerCase(),
+        features: info.value.features.split(", "),
+        numberOfSeats: parseInt(info.value.seats),
+        miles: parseInt(info.value.miles),
+        price: parseInt(info.value.price),
+        year: parseInt(info.value.year),
+        name: `${info.value.make} ${info.value.model}`,
+        listerId: user.value.id,
+        img: "asdasads"
+    }
+
+    delete body.seats;
+
+    try{    
+        const response = await $fetch("/api/car/listings", {
+            method: "post",
+            body
+        })
+        navigateTo('/profile/listings')
+    }catch (error) {
+        errorMessage.value = error.statusMessage
+    }
+}
 </script>
 
 <template>
@@ -65,8 +108,12 @@ const inputs = [{
         <div class="shadow rounded p-3 mt-5 flex flex-wrap justify-between">
             <CarAdSelect title="Make *" :options="makes" name="make" @change-input="onChangeInput" />
             <CarAdInput v-for="input in inputs" :key="input.id" :title="input.title" :name="input.name" :placeholder="input.placeholder" @change-input="onChangeInput" />
-            <CarAdTextarea title="Description *" :name="description" placeholder="" @change-input="onChangeInput" />
+            <CarAdTextarea title="Description *" name="description" placeholder="describe your car in few words" @change-input="onChangeInput" />
             <CarAdImage @change-input="onChangeInput" />
+            <div>
+                <button @click="handleSubmit" :disabled="isButtonDisabled" class="bg-blue-400 text-white rounded py-2 px-7 mt-5">Submit</button>
+            </div>
+            <p v-if="errorMessage" class="mt-3 text-red-400">{{ errorMessage }}</p>
         </div>
     </div>
 </template>
